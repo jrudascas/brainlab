@@ -22,10 +22,10 @@ class SignalExtraction(BaseInterface):
         from nilearn.input_data import NiftiLabelsMasker
         import numpy as np
 
-        dataset = datasets.fetch_atlas_harvard_oxford(self.inputs.atlas_identifier)
-        atlas_filename = dataset.maps
+        #dataset = datasets.fetch_atlas_harvard_oxford(self.inputs.atlas_identifier)
+        #atlas_filename = dataset.maps
 
-        masker = NiftiLabelsMasker(labels_img=atlas_filename,
+        masker = NiftiLabelsMasker(labels_img='/home/brainlab/Desktop/Rudas/Data/Parcellation/AAL from Freesourfer/anodesMNI_warp2.nii',
                                    standardize=True,
                                    detrend=True,
                                    low_pass=0.1,
@@ -34,6 +34,12 @@ class SignalExtraction(BaseInterface):
                                    memory='nilearn_cache',
                                    verbose=5)
 
+        file_labels = open('/home/brainlab/Desktop/Rudas/Data/Parcellation/AAL from Freesourfer/fs_default.txt', 'r')
+        labels = []
+        for line in file_labels.readlines():
+            labels.append(line)
+        file_labels.close()
+
         time_series = masker.fit_transform(self.inputs.in_file, confounds=self.inputs.confounds_file)
 
         np.savetxt(self.inputs.out_file, time_series, fmt='%10.2f', delimiter=',')
@@ -41,15 +47,25 @@ class SignalExtraction(BaseInterface):
         if self.inputs.plot:
             from nilearn import plotting
             from nilearn.connectome import ConnectivityMeasure
+            import matplotlib
+            import matplotlib.pyplot as plt
+            fig, ax = matplotlib.pyplot.subplots()
+
+            font = {'family': 'normal',
+                    'size': 5}
+
+            matplotlib.rc('font', **font)
+
             correlation_measure = ConnectivityMeasure(kind='correlation')
             correlation_matrix = correlation_measure.fit_transform([time_series])[0]
 
             # Mask the main diagonal for visualization:
             np.fill_diagonal(correlation_matrix, 0)
-            plotting.plot_matrix(correlation_matrix, figure=(10, 8), labels=dataset.labels[1:],
-                                 vmax=0.8, vmin=-0.8, reorder=True)
+            plotting.plot_matrix(correlation_matrix, figure=fig, labels=labels, vmax=0.8, vmin=-0.8, reorder=True)
 
-            plotting.show()
+            print(os.path.abspath('correlation_matrix.png'))
+            fig.savefig('/home/brainlab/Desktop/Rudas/' + 'correlation_matrix.png', dpi=1200)
+            #plotting.show()
 
         return runtime
 

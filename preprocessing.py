@@ -1,16 +1,16 @@
 from os.path import join as opj
 from nipype.interfaces.fsl import (BET, ExtractROI, FAST, FLIRT, MCFLIRT, SliceTimer, Threshold)
-import nipype.interfaces.spm as spm
 from custom_interfaces.ExtractConfounds import ExtractConfounds
 from custom_interfaces.SignalExtraction import SignalExtraction
 from custom_interfaces.ArtifacRemotion import ArtifacRemotion
 from nipype.interfaces.utility import IdentityInterface
 from nipype.interfaces.io import SelectFiles, DataSink
 from nipype.algorithms.rapidart import ArtifactDetect
-from nipype import Workflow, Node, Function
+from nipype import Workflow, Node
 from nipype.interfaces.spm import Normalize12
 from nipype.algorithms.misc import Gunzip
 from utils import *
+import nipype.interfaces.spm as spm
 import os
 
 template = '/usr/local/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz'
@@ -19,13 +19,21 @@ spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
 print('SPM version: ' + str(spm.SPMCommand().version))
 
-base_dir = '/home/brainlab/Desktop/Rudas/Data/Other'
+base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Awake/Resting'
+structural_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Structurals/'
 experiment_dir = opj(base_dir, 'output/')
 output_dir = 'datasink'
 working_dir = 'workingdir'
 
-subject_list = ['1']            # list of subject identifiers
-fwhm = 4                      # Smoothing widths to apply (Gaussian kernel size)
+subject_list = ['2014_05_02_02CB']
+
+#subject_list = ['2014_05_02_02CB',
+#                '2014_05_16_16RA',
+#                '2014_05_30_30AQ']
+
+# list of subject identifiers
+
+fwhm = 8                        # Smoothing widths to apply (Gaussian kernel size)
 TR = 2                          #Repetition time
 init_volume = 0                 #Firts volumen identification which will use in the pipeline
 iso_size = 2                    # Isometric resample of functional images to voxel size (in mm)
@@ -41,8 +49,7 @@ mcflirt = Node(MCFLIRT(mean_vol=True, save_plots=True, output_type='NIFTI'), nam
 slicetimer = Node(SliceTimer(index_dir=False, interleaved=True, output_type='NIFTI', time_repetition=TR), name="slice_timing_correction")
 
 # Smooth - image smoothing
-smooth = Node(spm.Smooth(), name="smooth")
-smooth.fwhm = fwhm
+smooth = Node(spm.Smooth(fwhm = fwhm), name="smooth")
 
 # Artifact Detection - determines outliers in functional images
 art = Node(ArtifactDetect(norm_threshold=2,
@@ -68,20 +75,14 @@ art_remotion = Node(ArtifacRemotion(out_file='fmri_art_removed.nii'),
                name='artifact_remotion')
 
 # BET - Skullstrip anatomical anf funtional images
-bet_t1 = Node(BET(frac=0.75,
-                    robust=True,
-                    mask=True,
-                    output_type='NIFTI_GZ'),
-                name="bet_t1")
+bet_t1 = Node(BET(frac=0.75, robust=True, mask=True, output_type='NIFTI_GZ'),
+              name="bet_t1")
 
-bet_fmri = Node(BET(frac=0.6,
-                    functional = True,
-                    output_type='NIFTI_GZ'),
+bet_fmri = Node(BET(frac=0.6, functional = True, output_type='NIFTI_GZ'),
                 name="bet_fmri")
 
 # FAST - Image Segmentation
-segmentation = Node(FAST(output_type='NIFTI'),
-                name="segmentation")
+segmentation = Node(FAST(output_type='NIFTI'), name="segmentation")
 
 # Normalize - normalizes functional and structural images to the MNI template
 normalize_fmri = Node(Normalize12(jobtype='estwrite',
@@ -94,13 +95,13 @@ gunzip = Node(Gunzip(), name="gunzip")
 
 normalize_t1 = Node(Normalize12(jobtype='estwrite',
                                 tpm=template,
-                                write_voxel_sizes=[2, 2, 2],
+                                write_voxel_sizes=[iso_size, iso_size, iso_size],
                                 write_bounding_box = [[-90, -126, -72], [90, 90, 108]]),
                  name="normalize_t1")
 
 normalize_masks = Node(Normalize12(jobtype='estwrite',
                                 tpm=template,
-                                write_voxel_sizes=[2, 2, 2],
+                                write_voxel_sizes=[iso_size, iso_size, iso_size],
                                 write_bounding_box = [[-90, -126, -72], [90, 90, 108]]),
                     name="normalize_masks")
 
@@ -114,23 +115,16 @@ threshold = Node(Threshold(thresh=0.5,
 coreg_pre = Node(FLIRT(dof=6, output_type='NIFTI_GZ'), name="linear_warp_estimation")
 
 # FLIRT - coregistration of functional images to anatomical images with BBR
-coreg_bbr = Node(FLIRT(dof=6,
-                       cost='bbr',
-                       schedule=opj(os.getenv('FSLDIR'),
-                                    'etc/flirtsch/bbr.sch'),
+coreg_bbr = Node(FLIRT(dof=6, cost='bbr', schedule=opj(os.getenv('FSLDIR'), 'etc/flirtsch/bbr.sch'),
                        output_type='NIFTI_GZ'),
                  name="nonlinear_warp_estimation")
 
 # Apply coregistration warp to functional images
-applywarp = Node(FLIRT(interp='spline',
-                       apply_isoxfm=iso_size,
-                       output_type='NIFTI'),
+applywarp = Node(FLIRT(interp='spline', apply_isoxfm=iso_size, output_type='NIFTI'),
                  name="registration_fmri")
 
 # Apply coregistration warp to mean file
-applywarp_mean = Node(FLIRT(interp='spline',
-                            apply_isoxfm=iso_size,
-                            output_type='NIFTI_GZ'),
+applywarp_mean = Node(FLIRT(interp='spline', apply_isoxfm=iso_size, output_type='NIFTI_GZ'),
                  name="registration_mean_fmri")
 
 # Infosource - a function free node to iterate over the list of subject names
@@ -138,8 +132,8 @@ infosource = Node(IdentityInterface(fields=['subject_id']), name="infosource")
 infosource.iterables = [('subject_id', subject_list)]
 
 # SelectFiles - to grab the data (alternativ to DataGrabber)
-anat_file = opj('sub-{subject_id}', 't1.nii')
-func_file = opj('sub-{subject_id}', 'fmri.nii')
+anat_file = opj(structural_dir, '{subject_id}', 't1.nii')
+func_file = opj('{subject_id}', 'fmri.nii')
 
 templates = {'anat': anat_file, 'func': func_file}
 
@@ -217,7 +211,7 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
                  (extract_confounds_ws_csf, datasink, [('out_file', 'preprocessing.@confounds_without_gs')]),
                  (extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
-                 (normalize_fmri, datasink, [('normalized_files', 'preprocessing.@fmri_normalized')]),
+                 (smooth, datasink, [('smoothed_files', 'preprocessing.@fmri_normalized')]),
                  (normalize_t1, datasink, [('normalized_files', 'preprocessing.@t1_normalized')]),
                  (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
                  (signal_extraction, datasink, [('out_file', 'preprocessing.@signal_extraction')])

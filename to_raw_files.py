@@ -1,6 +1,6 @@
 import os
 
-folder_path = '/home/brainlab/Desktop/Rudas/Data/Propofol_Movie/'
+folder_path = '/home/brainlab/Desktop/Rudas/Data/Lorina_Propofol_Resting_State/'
 
 cont = 1
 for (root, dirs, files) in os.walk(folder_path):
