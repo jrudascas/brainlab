@@ -1,15 +1,15 @@
 from os.path import join as opj
 from nipype.interfaces.fsl import (BET, ExtractROI, FAST, FLIRT, MCFLIRT, SliceTimer, Threshold)
-from custom_interfaces.ExtractConfounds import ExtractConfounds
-from custom_interfaces.SignalExtraction import SignalExtraction
-from custom_interfaces.ArtifacRemotion import ArtifacRemotion
+from fmri_preprocessing.interfaces.ExtractConfounds import ExtractConfounds
+from fmri_preprocessing.interfaces.SignalExtraction import SignalExtraction
+from fmri_preprocessing.interfaces.ArtifacRemotion import ArtifacRemotion
 from nipype.interfaces.utility import IdentityInterface
 from nipype.interfaces.io import SelectFiles, DataSink
 from nipype.algorithms.rapidart import ArtifactDetect
 from nipype import Workflow, Node
 from nipype.interfaces.spm import Normalize12
 from nipype.algorithms.misc import Gunzip
-from utils import *
+from miscellaneous.utils import *
 import nipype.interfaces.spm as spm
 import os
 
@@ -27,15 +27,31 @@ working_dir = 'workingdir'
 
 subject_list = ['2014_05_02_02CB']
 
-#subject_list = ['2014_05_02_02CB',
-#                '2014_05_16_16RA',
-#                '2014_05_30_30AQ']
+'''
+subject_list = ['2014_05_02_02CB',
+                '2014_05_16_16RA',
+                '2014_05_30_30AQ',
+                '2014_07_04_04HD',
+                '2014_07_04_04SG',
+                '2014_08_13_13CA',
+                '2014_10_08_08BC',
+                '2014_10_08_08VR',
+                '2014_10_22_22CY',
+                '2014_10_22_22TK',
+                '2014_11_17_17EK',
+                '2014_11_17_17NA',
+                '2014_11_19_19SA',
+                '2014_11_19_AK',
+                '2014_11_25.25JK',
+                '2014_11_27_27HF',
+                '2014_12_10_10JR']
+'''
 
 # list of subject identifiers
 
 fwhm = 8                        # Smoothing widths to apply (Gaussian kernel size)
-TR = 2                          #Repetition time
-init_volume = 0                 #Firts volumen identification which will use in the pipeline
+TR = 2                          # Repetition time
+init_volume = 0                 # Firts volumen identification which will use in the pipeline
 iso_size = 2                    # Isometric resample of functional images to voxel size (in mm)
 
 
@@ -65,7 +81,8 @@ extract_confounds_gs = Node(ExtractConfounds(out_file='ev_with_gs.csv',
                                              delimiter=','),
                                 name='extract_confounds_global_signal')
 
-signal_extraction = Node(SignalExtraction(out_file='time_series.csv',
+signal_extraction = Node(SignalExtraction(time_series_out_file='time_series.csv',
+                                          correlation_matrix_out_file='correlation_matrix.png',
                                           atlas_identifier='cort-maxprob-thr25-2mm',
                                           tr=TR,
                                           plot=True),
@@ -204,17 +221,19 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (smooth, extract_confounds_ws_csf, [('smoothed_files', 'in_file')]),
                  (normalize_masks, extract_confounds_ws_csf, [('normalized_files', 'list_mask')]),
                  (mcflirt, extract_confounds_ws_csf, [('par_file', 'file_concat')]),
-                 (smooth, extract_confounds_gs, [('smoothed_files', 'in_file')]),
-                 (normalize_t1, extract_confounds_gs, [(('normalized_files',change_to_list), 'list_mask')]),
-                 (extract_confounds_ws_csf, extract_confounds_gs, [('out_file', 'file_concat')]),
+                 #(smooth, extract_confounds_gs, [('smoothed_files', 'in_file')]),
+                 #(normalize_t1, extract_confounds_gs, [(('normalized_files',change_to_list), 'list_mask')]),
+                 #(extract_confounds_ws_csf, extract_confounds_gs, [('out_file', 'file_concat')]),
                  (smooth, signal_extraction, [('smoothed_files', 'in_file')]),
-                 (extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
+                 #(extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
+                 (extract_confounds_ws_csf, signal_extraction, [('out_file', 'confounds_file')]),
                  (extract_confounds_ws_csf, datasink, [('out_file', 'preprocessing.@confounds_without_gs')]),
-                 (extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
+                 #(extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
                  (smooth, datasink, [('smoothed_files', 'preprocessing.@fmri_normalized')]),
                  (normalize_t1, datasink, [('normalized_files', 'preprocessing.@t1_normalized')]),
                  (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
-                 (signal_extraction, datasink, [('out_file', 'preprocessing.@signal_extraction')])
+                 (signal_extraction, datasink, [('time_series_out_file', 'preprocessing.@time_serie')]),
+                 (signal_extraction, datasink, [('correlation_matrix_out_file', 'preprocessing.@correlation_matrix')])
                  ])
 
 preproc.write_graph(graph2use='colored', format='png', simple_form=True)

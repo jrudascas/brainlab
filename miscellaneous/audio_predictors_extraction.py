@@ -3,18 +3,20 @@ from pyAudioAnalysis import audioFeatureExtraction
 import matplotlib.pyplot as plt
 import numpy as np
 
-#[Fs, x] = audioBasicIO.readAudioFile("/home/brainlab/Downloads/couchplayin.wav")
-[Fs, x] = audioBasicIO.readAudioFile("/home/brainlab/Downloads/Taken-[AudioTrimmer.com].wav")
-
+audio_path = "/home/brainlab/Downloads/Taken-[AudioTrimmer.com].wav"
 tr = 2
+channel = 0
+number_features_to_use = 21
+number_feature_to_plot = 7
+output_filename = 'audio_predictors.txt'
 
-F, f_names = audioFeatureExtraction.stFeatureExtraction(x[:,0], Fs, tr*Fs, tr*Fs)
+[Fs, x] = audioBasicIO.readAudioFile("/home/brainlab/Downloads/Taken-[AudioTrimmer.com].wav")
+F, f_names = audioFeatureExtraction.stFeatureExtraction(x[:, channel], Fs, tr*Fs, tr*Fs)
 
-np.savetxt('audio_predictors.txt', np.transpose(F[:21]), fmt='%10.6f', delimiter=',')
+np.savetxt(output_filename, np.transpose(F[:number_features_to_use]), fmt='%10.6f', delimiter=' ', header=' '.join(f_names[:number_features_to_use]))
 
-number_feature = 7
-for feature in range(number_feature):
-    plt.subplot(number_feature,1,feature+1); plt.plot(F[feature,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[feature])
+for feature in range(number_feature_to_plot):
+    plt.subplot(number_feature_to_plot,1,feature+1); plt.plot(F[feature,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[feature])
 
 
 plt.show()

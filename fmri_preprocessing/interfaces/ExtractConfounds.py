@@ -1,6 +1,7 @@
 from nipype.interfaces.base import BaseInterfaceInputSpec, File, TraitedSpec, traits, BaseInterface
 import os
 
+
 class ExtractConfoundsInputSpec(BaseInterfaceInputSpec):
     in_file = File(exists=True, mandatory=True)
     out_file = File(mandatory=True)
@@ -8,8 +9,10 @@ class ExtractConfoundsInputSpec(BaseInterfaceInputSpec):
     list_mask = traits.List(mandatory=True)
     file_concat = File(mandatory=False)
 
+
 class ExtractConfoundsOutputSpec(TraitedSpec):
     out_file = File(genfile=True)
+
 
 class ExtractConfounds(BaseInterface):
     input_spec = ExtractConfoundsInputSpec

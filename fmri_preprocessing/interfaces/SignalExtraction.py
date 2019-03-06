@@ -3,14 +3,19 @@ import os
 
 class SignalExtractionInputSpec(BaseInterfaceInputSpec):
     in_file = File(exists=True, mandatory=True)
-    out_file = File(mandatory=True)
+    time_series_out_file = File(mandatory=True)
+    correlation_matrix_out_file = File(genfile=True)
+    fmri_cleaned_out_file = File(genfile=True)
     atlas_identifier = traits.String(mandatory=True)
     tr = traits.Float(mandatory=True)
     confounds_file = File(mandatory=True)
     plot = traits.Bool(default_value=False, mandatory = False)
 
 class SignalExtractionOutputSpec(TraitedSpec):
-    out_file = File(genfile=True)
+    time_series_out_file = File(genfile=True)
+    correlation_matrix_out_file = File(genfile=True)
+    fmri_cleaned_out_file = File(genfile=True)
+
 
 class SignalExtraction(BaseInterface):
     input_spec = SignalExtractionInputSpec
@@ -25,7 +30,7 @@ class SignalExtraction(BaseInterface):
         #dataset = datasets.fetch_atlas_harvard_oxford(self.inputs.atlas_identifier)
         #atlas_filename = dataset.maps
 
-        masker = NiftiLabelsMasker(labels_img='/home/brainlab/Desktop/Rudas/Data/Parcellation/AAL from Freesourfer/anodesMNI_warp2.nii',
+        masker = NiftiLabelsMasker(labels_img='/home/brainlab/Desktop/Rudas/Data/Parcellation/atlas_NMI_2mm.nii',
                                    standardize=True,
                                    detrend=True,
                                    low_pass=0.1,
@@ -42,7 +47,7 @@ class SignalExtraction(BaseInterface):
 
         time_series = masker.fit_transform(self.inputs.in_file, confounds=self.inputs.confounds_file)
 
-        np.savetxt(self.inputs.out_file, time_series, fmt='%10.2f', delimiter=',')
+        np.savetxt(self.inputs.time_series_out_file, time_series, fmt='%10.2f', delimiter=',')
 
         if self.inputs.plot:
             from nilearn import plotting
@@ -63,16 +68,17 @@ class SignalExtraction(BaseInterface):
             np.fill_diagonal(correlation_matrix, 0)
             plotting.plot_matrix(correlation_matrix, figure=fig, labels=labels, vmax=0.8, vmin=-0.8, reorder=True)
 
-            print(os.path.abspath('correlation_matrix.png'))
-            fig.savefig('/home/brainlab/Desktop/Rudas/' + 'correlation_matrix.png', dpi=1200)
-            #plotting.show()
+            fig.savefig(self.inputs.correlation_matrix_out_file, dpi=1200)
 
         return runtime
 
     def _list_outputs(self):
-        return {'out_file': os.path.abspath(self.inputs.out_file)}
+        return {'time_series_out_file': os.path.abspath(self.inputs.time_series_out_file),
+                'correlation_matrix_out_file':os.path.abspath(self.inputs.correlation_matrix_out_file)}
 
     def _gen_filename(self, name):
-        if name == 'out_file':
-            return os.path.abspath(self.inputs.out_file)
+        if name == 'time_series_out_file':
+            return os.path.abspath(self.inputs.time_series_out_file)
+        if name == 'correlation_matrix_out_file':
+            return os.path.abspath(self.inputs.correlation_matrix_out_file)
         return None
