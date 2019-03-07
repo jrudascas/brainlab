@@ -13,7 +13,7 @@ from miscellaneous.utils import *
 import nipype.interfaces.spm as spm
 import os
 
-template = '/usr/local/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz'
+template = '/home/brainlab/Desktop/Rudas/Data/Parcellation/TPM.nii'
 matlab_cmd = '/home/brainlab/Desktop/Rudas/Tools/spm12_r7487/spm12/run_spm12.sh /home/brainlab/Desktop/Rudas/Tools/MCR/v713/ script'
 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
@@ -25,9 +25,8 @@ experiment_dir = opj(base_dir, 'output/')
 output_dir = 'datasink'
 working_dir = 'workingdir'
 
-subject_list = ['2014_05_02_02CB']
+#subject_list = ['2014_10_22_22CY']
 
-'''
 subject_list = ['2014_05_02_02CB',
                 '2014_05_16_16RA',
                 '2014_05_30_30AQ',
@@ -45,7 +44,6 @@ subject_list = ['2014_05_02_02CB',
                 '2014_11_25.25JK',
                 '2014_11_27_27HF',
                 '2014_12_10_10JR']
-'''
 
 # list of subject identifiers
 
@@ -88,15 +86,12 @@ signal_extraction = Node(SignalExtraction(time_series_out_file='time_series.csv'
                                           plot=True),
                          name='signal_extraction')
 
-art_remotion = Node(ArtifacRemotion(out_file='fmri_art_removed.nii'),
-               name='artifact_remotion')
+art_remotion = Node(ArtifacRemotion(out_file='fmri_art_removed.nii'), name='artifact_remotion')
 
 # BET - Skullstrip anatomical anf funtional images
-bet_t1 = Node(BET(frac=0.75, robust=True, mask=True, output_type='NIFTI_GZ'),
-              name="bet_t1")
+bet_t1 = Node(BET(frac=0.55, robust=True, mask=True, output_type='NIFTI_GZ'), name="bet_t1")
 
-bet_fmri = Node(BET(frac=0.6, functional = True, output_type='NIFTI_GZ'),
-                name="bet_fmri")
+bet_fmri = Node(BET(frac=0.6, functional = True, output_type='NIFTI_GZ'), name="bet_fmri")
 
 # FAST - Image Segmentation
 segmentation = Node(FAST(output_type='NIFTI'), name="segmentation")
@@ -211,12 +206,19 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (art, art_remotion, [('outlier_files', 'outlier_files')]),
                  (coregwf, art_remotion, [('registration_fmri.out_file', 'in_file')]),
                  (coregwf, gunzip, [('bet_t1.out_file', 'in_file')]),
-                 (gunzip, normalize_fmri, [('out_file', 'image_to_align')]),
+
+                 (selectfiles, normalize_fmri, [('anat', 'image_to_align')]),
                  (art_remotion, normalize_fmri, [('out_file', 'apply_to_files')]),
-                 (gunzip, normalize_t1, [('out_file', 'image_to_align')]),
+
+                 #(gunzip, normalize_t1, [('out_file', 'image_to_align')]),
+                 #(gunzip, normalize_t1, [('out_file', 'apply_to_files')]),
+
+                 (selectfiles, normalize_t1, [('anat', 'image_to_align')]),
                  (gunzip, normalize_t1, [('out_file', 'apply_to_files')]),
-                 (gunzip, normalize_masks, [('out_file', 'image_to_align')]),
+
+                 (selectfiles, normalize_masks, [('anat', 'image_to_align')]),
                  (coregwf, normalize_masks, [(('segmentation.partial_volume_files', get_wm_csf), 'apply_to_files')]),
+
                  (normalize_fmri, smooth, [('normalized_files', 'in_files')]),
                  (smooth, extract_confounds_ws_csf, [('smoothed_files', 'in_file')]),
                  (normalize_masks, extract_confounds_ws_csf, [('normalized_files', 'list_mask')]),
@@ -227,9 +229,11 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (smooth, signal_extraction, [('smoothed_files', 'in_file')]),
                  #(extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
                  (extract_confounds_ws_csf, signal_extraction, [('out_file', 'confounds_file')]),
+
+                  #(extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
                  (extract_confounds_ws_csf, datasink, [('out_file', 'preprocessing.@confounds_without_gs')]),
-                 #(extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
-                 (smooth, datasink, [('smoothed_files', 'preprocessing.@fmri_normalized')]),
+                 (smooth, datasink, [('smoothed_files', 'preprocessing.@smoothed')]),
+                 (normalize_fmri, datasink, [('normalized_files', 'preprocessing.@fmri_normalized')]),
                  (normalize_t1, datasink, [('normalized_files', 'preprocessing.@t1_normalized')]),
                  (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
                  (signal_extraction, datasink, [('time_series_out_file', 'preprocessing.@time_serie')]),

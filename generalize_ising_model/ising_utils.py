@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 from numpy import NaN, Inf, arange, isscalar, asarray, array
-
+from scipy.optimize import curve_fit
 
 def to_save_results(temperature_parameters, J , E, M, H, S, simulated_fc, critical_temperature, path_output):
     default_delimiter = ','
@@ -146,8 +146,6 @@ def find_nearest(array, value):
 
 
 def dim(corr_func, r, idx_Tc):
-    from scipy.optimize import curve_fit
-    r = np.transpose(r)
 
     def model(r, z, p):
         return (np.exp(-r * z)) / (r ** p)
@@ -156,7 +154,7 @@ def dim(corr_func, r, idx_Tc):
     p_estimateds = []
 
     for i in range(corr_func.shape[0]):
-        corr_func_in = corr_func[i,]
+        corr_func_in = corr_func[i,:]
         parameters_estimated, pcov = curve_fit(model, r, corr_func_in, maxfev=10000)
 
         z_estimateds.append(1 / parameters_estimated[0])
@@ -199,12 +197,12 @@ def corrfun(corr, J):
             count = count + 1
     return corr_func, r
 
+
 def correlation_function(simulated_matrix, structural_matrix):
     Corr_all = np.nan_to_num(simulated_matrix)
     temp = Corr_all.shape[2]
     max_J = np.max(structural_matrix)
     J = structural_matrix / max_J
-
 
     corr_func = np.zeros((temp, 50))
 
@@ -224,6 +222,7 @@ def correlation_function(simulated_matrix, structural_matrix):
 
         count = count + 1
     return corr_func, r
+
 
 def distance_wei(G):
     '''

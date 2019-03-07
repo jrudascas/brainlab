@@ -3,6 +3,7 @@ import numpy as np
 from os import walk
 from generalize_ising_model.ising_utils import to_normalize, to_save_results, correlation_function
 import os
+import pickle
 
 path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/'
 simulation_name = 'experiment_1'
@@ -10,10 +11,10 @@ simulation_name = 'experiment_1'
 dir_output_name = path_input + simulation_name
 
 thermalize_time = 0.3
-spin_vector_sizes = range(5, 105, 10)
+spin_vector_sizes = range(105, 305, 50)
 initial_temperature = 0
 no_temperatures = 50
-no_entities = 50
+no_entities = 5
 no_simulations = 250
 
 if not os.path.exists(dir_output_name):
@@ -29,10 +30,9 @@ for N in spin_vector_sizes:
     print()
     print('Random - N: ' + str(N))
 
-    np.save(dir_output_subname + '/' + 'parameters',
-            {'temperature_parameters': temperature_parameters,
-             'no_simulations': no_simulations,
-             'thermalize_time': thermalize_time})
+    output = open(dir_output_subname + '/' + 'parameters.pkl', 'wb')
+    pickle.dump({'temperature_parameters':temperature_parameters, 'no_simulations':no_simulations, 'thermalize_time':thermalize_time}, output)
+    output.close()
 
     for entity in range(no_entities):
         print()

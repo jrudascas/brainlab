@@ -1,20 +1,60 @@
-from generalize_ising_model.ising_utils import to_normalize, to_save_results, correlation_function, dim
+from generalize_ising_model.ising_utils import to_normalize, to_save_results, correlation_function, dim, find_nearest
 from os import walk
 import numpy as np
+import pickle
+from natsort import natsorted
+import matplotlib.pyplot as plt
+import os
 
 path_simulation_output = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_1'
 
-for root, simulations, files in walk(path_simulation_output):
-    for simulation in sorted(simulations):
-        path_simulation = root + '/' + simulation
-        for root2, entities, files2 in walk(path_simulation):
-            simulation_parameters = np.load(path_simulation + '/parameters.npy')
-            for entity in sorted(entities):
-                path_entity = path_simulation + '/' + entity + '/'
-                critical_temperature = np.loadtxt(path_entity + 'ctem.csv', delimiter=',')
+susceptibility_exp = []
+dimensionality_exp = []
+sizes_exp = []
+for simulation in natsorted(os.listdir(path_simulation_output)):
+
+    path_simulation = path_simulation_output + '/' + simulation
+
+    if os.path.isdir(path_simulation):
+        print()
+        print(simulation)
+        print()
+
+        pkl_file = open(path_simulation + '/parameters.pkl', 'rb')
+        simulation_parameters = pickle.load(pkl_file)
+        pkl_file.close()
+        ts = np.linspace(simulation_parameters['temperature_parameters'][0],
+                         simulation_parameters['temperature_parameters'][1],
+                         simulation_parameters['temperature_parameters'][2])
+
+        sizes_exp.append(simulation_parameters['temperature_parameters'][1])
+        susceptibility_sim = []
+        ctemp_sim = []
+        dimensionality_sim = []
+        for entity in natsorted(os.listdir(path_simulation)):
+            path_entity = path_simulation + '/' + entity + '/'
+
+            if os.path.isdir(path_entity):
+                print(entity)
+
                 simulated_matrix = np.load(path_entity + 'sim_fc.npy')
                 J = np.loadtxt(path_entity + 'J_ij.csv', delimiter=',')
+                critical_temperature = np.loadtxt(path_entity + 'ctem.csv', delimiter=',')
+                ctemp_sim.append(critical_temperature)
+                susceptibility_sim.append(np.loadtxt(path_entity + 'susc.csv', delimiter=','))
 
                 c, r = correlation_function(simulated_matrix, J)
 
-                print(dim(c, r, 8))
+                index_ct = find_nearest(ts, critical_temperature)
+                dimensionality_sim.append(dim(c, r, index_ct))
+                #print(dim(c, r, index_ct))
+
+        dimensionality_exp.append(dimensionality_sim)
+
+    #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
+
+        # plot violin plot
+plt.violinplot(dimensionality_exp, positions=np.linspace(0, 10, num=10), showmeans=False, showmedians=True)
+
+        #plt.scatter(np.linspace(0, 49, num=50), dimensionality_sim)
+plt.show()
