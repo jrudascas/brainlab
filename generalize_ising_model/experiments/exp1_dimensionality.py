@@ -54,7 +54,7 @@ for simulation in natsorted(os.listdir(path_simulation_output)):
     #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
 
         # plot violin plot
-plt.violinplot(dimensionality_exp, positions=np.linspace(0, 10, num=10), showmeans=False, showmedians=True)
+plt.violinplot(dimensionality_exp, positions=np.array([5,15,25,35,45,55,65,75,85,95,105,155])/10, showmeans=False, showmedians=True)
 
         #plt.scatter(np.linspace(0, 49, num=50), dimensionality_sim)
 plt.show()

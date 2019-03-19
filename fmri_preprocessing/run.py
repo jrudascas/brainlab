@@ -3,6 +3,8 @@ from nipype.interfaces.fsl import (BET, ExtractROI, FAST, FLIRT, MCFLIRT, SliceT
 from fmri_preprocessing.interfaces.ExtractConfounds import ExtractConfounds
 from fmri_preprocessing.interfaces.SignalExtraction import SignalExtraction
 from fmri_preprocessing.interfaces.ArtifacRemotion import ArtifacRemotion
+from fmri_preprocessing.interfaces.N4Bias import N4Bias
+from fmri_preprocessing.interfaces.Descomposition import Descomposition
 from nipype.interfaces.utility import IdentityInterface
 from nipype.interfaces.io import SelectFiles, DataSink
 from nipype.algorithms.rapidart import ArtifactDetect
@@ -25,7 +27,7 @@ experiment_dir = opj(base_dir, 'output/')
 output_dir = 'datasink'
 working_dir = 'workingdir'
 
-#subject_list = ['2014_10_22_22CY']
+#subject_list = ['2014_05_02_02CB']
 
 subject_list = ['2014_05_02_02CB',
                 '2014_05_16_16RA',
@@ -44,6 +46,7 @@ subject_list = ['2014_05_02_02CB',
                 '2014_11_25.25JK',
                 '2014_11_27_27HF',
                 '2014_12_10_10JR']
+
 
 # list of subject identifiers
 
@@ -65,6 +68,10 @@ slicetimer = Node(SliceTimer(index_dir=False, interleaved=True, output_type='NIF
 # Smooth - image smoothing
 smooth = Node(spm.Smooth(fwhm = fwhm), name="smooth")
 
+n4bias = Node(N4Bias(out_file='t1_n4bias.nii.gz'), name='n4bias')
+
+descomposition = Node(Descomposition(n_components=20, low_pass=0.1, high_pass=0.01, tr=TR), name='descomposition')
+
 # Artifact Detection - determines outliers in functional images
 art = Node(ArtifactDetect(norm_threshold=2,
                           zintensity_threshold=3,
@@ -75,9 +82,9 @@ art = Node(ArtifactDetect(norm_threshold=2,
 extract_confounds_ws_csf = Node(ExtractConfounds(out_file='ev_without_gs.csv'),
                                 name='extract_confounds_ws_csf')
 
-extract_confounds_gs = Node(ExtractConfounds(out_file='ev_with_gs.csv',
-                                             delimiter=','),
-                                name='extract_confounds_global_signal')
+#extract_confounds_gs = Node(ExtractConfounds(out_file='ev_with_gs.csv',
+#                                             delimiter=','),
+#                                name='extract_confounds_global_signal')
 
 signal_extraction = Node(SignalExtraction(time_series_out_file='time_series.csv',
                                           correlation_matrix_out_file='correlation_matrix.png',
@@ -89,9 +96,7 @@ signal_extraction = Node(SignalExtraction(time_series_out_file='time_series.csv'
 art_remotion = Node(ArtifacRemotion(out_file='fmri_art_removed.nii'), name='artifact_remotion')
 
 # BET - Skullstrip anatomical anf funtional images
-bet_t1 = Node(BET(frac=0.55, robust=True, mask=True, output_type='NIFTI_GZ'), name="bet_t1")
-
-bet_fmri = Node(BET(frac=0.6, functional = True, output_type='NIFTI_GZ'), name="bet_fmri")
+bet_t1 = Node(BET(frac=0.5, robust=True, mask=True, output_type='NIFTI_GZ'), name="bet_t1")
 
 # FAST - Image Segmentation
 segmentation = Node(FAST(output_type='NIFTI'), name="segmentation")
@@ -163,15 +168,17 @@ preproc = Workflow(name='preproc')
 preproc.base_dir = opj(experiment_dir, working_dir)
 
 # Connect all components of the coregistration workflow
-coregwf.connect([(bet_t1, segmentation, [('out_file', 'in_files')]),
+
+coregwf.connect([(bet_t1, n4bias, [('out_file', 'in_file')]),
+                 (n4bias, segmentation, [('out_file', 'in_files')]),
                  (segmentation, threshold, [(('partial_volume_files', get_latest),'in_file')]),
-                 (bet_t1, coreg_pre, [('out_file', 'reference')]),
+                 (n4bias, coreg_pre, [('out_file', 'reference')]),
                  (threshold, coreg_bbr, [('out_file', 'wm_seg')]),
                  (coreg_pre, coreg_bbr, [('out_matrix_file', 'in_matrix_file')]),
                  (coreg_bbr, applywarp, [('out_matrix_file', 'in_matrix_file')]),
-                 (bet_t1, applywarp, [('out_file', 'reference')]),
+                 (n4bias, applywarp, [('out_file', 'reference')]),
                  (coreg_bbr, applywarp_mean, [('out_matrix_file', 'in_matrix_file')]),
-                 (bet_t1, applywarp_mean, [('out_file', 'reference')]),
+                 (n4bias, applywarp_mean, [('out_file', 'reference')]),
                  ])
 
 ## Use the following DataSink output substitutions
@@ -192,8 +199,7 @@ datasink.inputs.substitutions = substitutions
 # Connect all components of the preprocessing workflow
 preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (selectfiles, extract, [('func', 'in_file')]),
-                 (extract, bet_fmri, [('roi_file', 'in_file')]),
-                 (bet_fmri, mcflirt, [('out_file', 'in_file')]),
+                 (extract, mcflirt, [('roi_file', 'in_file')]),
                  (mcflirt, slicetimer, [('out_file', 'in_file')]),
                  (selectfiles, coregwf, [('anat', 'bet_t1.in_file'),
                                          ('anat', 'nonlinear_warp_estimation.reference')]),
@@ -205,13 +211,10 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (mcflirt, art, [('par_file', 'realignment_parameters')]),
                  (art, art_remotion, [('outlier_files', 'outlier_files')]),
                  (coregwf, art_remotion, [('registration_fmri.out_file', 'in_file')]),
-                 (coregwf, gunzip, [('bet_t1.out_file', 'in_file')]),
+                 (coregwf, gunzip, [('n4bias.out_file', 'in_file')]),
 
                  (selectfiles, normalize_fmri, [('anat', 'image_to_align')]),
                  (art_remotion, normalize_fmri, [('out_file', 'apply_to_files')]),
-
-                 #(gunzip, normalize_t1, [('out_file', 'image_to_align')]),
-                 #(gunzip, normalize_t1, [('out_file', 'apply_to_files')]),
 
                  (selectfiles, normalize_t1, [('anat', 'image_to_align')]),
                  (gunzip, normalize_t1, [('out_file', 'apply_to_files')]),
@@ -230,6 +233,9 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  #(extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
                  (extract_confounds_ws_csf, signal_extraction, [('out_file', 'confounds_file')]),
 
+                 (smooth, descomposition, [('smoothed_files', 'in_file')]),
+                 (extract_confounds_ws_csf, descomposition, [('out_file', 'confounds_file')]),
+
                   #(extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
                  (extract_confounds_ws_csf, datasink, [('out_file', 'preprocessing.@confounds_without_gs')]),
                  (smooth, datasink, [('smoothed_files', 'preprocessing.@smoothed')]),
@@ -237,7 +243,9 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (normalize_t1, datasink, [('normalized_files', 'preprocessing.@t1_normalized')]),
                  (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
                  (signal_extraction, datasink, [('time_series_out_file', 'preprocessing.@time_serie')]),
-                 (signal_extraction, datasink, [('correlation_matrix_out_file', 'preprocessing.@correlation_matrix')])
+                 (signal_extraction, datasink, [('correlation_matrix_out_file', 'preprocessing.@correlation_matrix')]),
+                 (descomposition, datasink, [('out_file', 'preprocessing.@descomposition')]),
+                 (descomposition, datasink, [('plot_files', 'preprocessing.@descomposition_plot_files')])
                  ])
 
 preproc.write_graph(graph2use='colored', format='png', simple_form=True)

@@ -37,7 +37,7 @@ class SignalExtraction(BaseInterface):
                                    high_pass=0.01,
                                    t_r=self.inputs.tr,
                                    memory='nilearn_cache',
-                                   verbose=5)
+                                   verbose=0)
 
         file_labels = open('/home/brainlab/Desktop/Rudas/Data/Parcellation/AAL from Freesourfer/fs_default.txt', 'r')
         labels = []

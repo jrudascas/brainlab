@@ -1,8 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import networkx as nx
 from numpy import NaN, Inf, arange, isscalar, asarray, array
 from scipy.optimize import curve_fit
+import os
+
+
+def makedir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+def save_graph(path_output, graph):
+    format = '%1.4f'
+
+    matrix = nx.to_numpy_array(graph)
+
+    np.savetxt(path_output, matrix, delimiter=',', fmt=format)
+
 
 def to_save_results(temperature_parameters, J , E, M, H, S, simulated_fc, critical_temperature, path_output):
     default_delimiter = ','

@@ -27,7 +27,7 @@ class ExtractConfounds(BaseInterface):
         if isinstance(self.inputs.delimiter, str):
             delimiter = self.inputs.delimiter
 
-        threshold = 0.6
+        threshold = 0.8
         img = nib.load(self.inputs.in_file)
         data = img.get_data()
         confounds = []
@@ -35,11 +35,14 @@ class ExtractConfounds(BaseInterface):
         if not isinstance(self.inputs.list_mask, list):
             aux = self.inputs.list_mask
             list_mask = [aux]
+
         for mask in self.inputs.list_mask:
-            mask_data = nib.load(mask).get_data()
+            mask_data = np.nan_to_num(nib.load(mask).get_data())
 
             confounds.append(np.mean(data[mask_data > threshold, :], axis=0))
+
         ev = np.transpose(np.array(confounds))
+
         if self.inputs.file_concat is not None:
             extra_confounds = np.loadtxt(self.inputs.file_concat, delimiter=delimiter)
             results = np.concatenate((ev, extra_confounds), axis=1)
