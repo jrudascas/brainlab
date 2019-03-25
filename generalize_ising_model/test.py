@@ -3,10 +3,10 @@ from generalize_ising_model.core import generalized_ising
 import matplotlib.pyplot as plt
 import time
 
-temperature_parameters = (0.05, 10, 50)
+N = 5
+temperature_parameters = (0.05, N, 50)
 no_simulations = 250
 thermalize_time = 0.3
-N = 10
 J = np.random.rand(N, N)
 print(''.join('*' * temperature_parameters[2]))
 

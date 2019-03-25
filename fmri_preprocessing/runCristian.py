@@ -21,38 +21,19 @@ spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
 print('SPM version: ' + str(spm.SPMCommand().version))
 
-base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Mild/Resting'
-structural_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Structurals/'
+base_dir = '/home/brainlab/Desktop/testcristian2/fmri'
+structural_dir = '/home/brainlab/Desktop/testcristian2/anat/'
 experiment_dir = opj(base_dir, 'output/')
 output_dir = 'datasink'
 working_dir = 'workingdir'
 
-#subject_list = ['2014_05_02_02CB']
-
-subject_list = ['2014_05_02_02CB',
-                '2014_05_16_16RA',
-                '2014_05_30_30AQ',
-                '2014_07_04_04HD',
-                '2014_07_04_04SG',
-                '2014_08_13_13CA',
-                '2014_10_08_08BC',
-                '2014_10_08_08VR',
-                '2014_10_22_22CY',
-                '2014_10_22_22TK',
-                '2014_11_17_17EK',
-                '2014_11_17_17NA',
-                '2014_11_19_19SA',
-                '2014_11_19_AK',
-                '2014_11_25.25JK',
-                '2014_11_27_27HF',
-                '2014_12_10_10JR']
-
+subject_list = ['sub1']
 
 # list of subject identifiers
 
 fwhm = 8                        # Smoothing widths to apply (Gaussian kernel size)
-TR = 2                          # Repetition time
-init_volume = 0                 # Firts volumen identification which will use in the pipeline
+TR = 3                          # Repetition time
+init_volume = 5                 # Firts volumen identification which will use in the pipeline
 iso_size = 2                    # Isometric resample of functional images to voxel size (in mm)
 
 

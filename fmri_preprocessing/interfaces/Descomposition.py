@@ -36,7 +36,7 @@ class Descomposition(BaseInterface):
                         standardize=True,
                         threshold='auto',
                         random_state=0,
-                        n_jobs=-2,
+                        n_jobs=2,
                         memory_level=2,
                         memory="nilearn_cache")
 

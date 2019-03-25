@@ -82,3 +82,5 @@ class SignalExtraction(BaseInterface):
         if name == 'correlation_matrix_out_file':
             return os.path.abspath(self.inputs.correlation_matrix_out_file)
         return None
+
+

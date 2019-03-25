@@ -148,8 +148,6 @@ def generalized_ising(Jij, temperature_parameters=(0.1, 5, 100), no_simulations=
     E, M, S, H = np.zeros(no_temperature), np.zeros(no_temperature), np.zeros(no_temperature), np.zeros(no_temperature)
     simulation = np.zeros((n, no_simulations, no_temperature))
 
-    #pool = multiprocessing.Pool(n_cpu)
-
     for tT in range(no_temperature):
         print('|', end='')
         start_time = time.time()

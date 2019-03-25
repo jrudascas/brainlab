@@ -6,7 +6,7 @@ from natsort import natsorted
 import matplotlib.pyplot as plt
 import os
 
-path_simulation_output = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_1'
+path_simulation_output = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/simulation/undirected_weighted/'
 
 susceptibility_exp = []
 dimensionality_exp = []
@@ -54,7 +54,7 @@ for simulation in natsorted(os.listdir(path_simulation_output)):
     #    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
 
         # plot violin plot
-plt.violinplot(dimensionality_exp, positions=np.array([5,15,25,35,45,55,65,75,85,95,105,155])/10, showmeans=False, showmedians=True)
-
+plt.violinplot(dimensionality_exp, positions=np.array(sizes_exp)/10, showmeans=False, showmedians=True)
+plt.xticks(np.array(sizes_exp)/10, list(map(str, sizes_exp)))
         #plt.scatter(np.linspace(0, 49, num=50), dimensionality_sim)
 plt.show()

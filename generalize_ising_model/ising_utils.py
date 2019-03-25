@@ -11,11 +11,10 @@ def makedir(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+
 def save_graph(path_output, graph):
     format = '%1.4f'
-
     matrix = nx.to_numpy_array(graph)
-
     np.savetxt(path_output, matrix, delimiter=',', fmt=format)
 
 
@@ -60,6 +59,9 @@ def to_save_results(temperature_parameters, J , E, M, H, S, simulated_fc, critic
 
     # plt.show()
     plt.savefig(path_output + 'plots.png', dpi=300)
+
+    del ts
+    plt.close()
 
 
 def peakdet(v, delta, x=None):
@@ -168,9 +170,12 @@ def dim(corr_func, r, idx_Tc):
     z_estimateds = []
     p_estimateds = []
 
+    r = r[1:-1]
+    corr_func = corr_func[1:-1,1:-1]
+
     for i in range(corr_func.shape[0]):
         corr_func_in = corr_func[i,:]
-        parameters_estimated, pcov = curve_fit(model, r, corr_func_in, maxfev=10000)
+        parameters_estimated, pcov = curve_fit(model, np.nan_to_num(r), np.nan_to_num(corr_func_in), maxfev=10000)
 
         z_estimateds.append(1 / parameters_estimated[0])
         p_estimateds.append(parameters_estimated[1])
