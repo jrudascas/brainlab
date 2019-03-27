@@ -2,7 +2,8 @@ import numpy as np
 from generalize_ising_model.ising_utils import save_graph, to_save_results
 import os
 from generalize_ising_model.core import generalized_ising
-
+import networkx as nx
+import random
 import pickle
 
 path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/'
@@ -43,14 +44,15 @@ for N in sorted(spin_vector_sizes):
         if not os.path.exists(dir_output_subname_entity):
             os.mkdir(dir_output_subname_entity)
 
-            import networkx as nx
-            import random
-
-
-            G = nx.generators.fast_gnp_random_graph(N, 0.5, directed=True)
+            G = nx.generators.fast_gnp_random_graph(N, 1, directed=True)
 
             for (u, v) in G.edges():
-                G.edges[u, v]['weight'] = random.random()
+                while True:
+                    rr = random.random()
+                    if rr > 0.9 and rr < 1.0:
+                        break
+
+                G.edges[u, v]['weight'] = rr
 
             matrix = nx.to_numpy_array(G)
             save_graph(dir_output_subname_entity + '/' + 'J_ij.csv', G)

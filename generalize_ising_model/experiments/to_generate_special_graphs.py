@@ -4,10 +4,10 @@ from generalize_ising_model.ising_utils import save_graph, makedir
 import numpy as np
 import os
 
-path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/data/'
+path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_1/'
 
 default_size = 40
-default_no_entities = 5
+default_no_entities = 20
 
 # Geometric and Form
 
@@ -36,18 +36,18 @@ path_output_data_type = path_output_data + 'free_scale/'
 makedir(path_output_data_type)
 
 for i in range(default_no_entities):
-    G = nx.scale_free_graph(default_size, alpha=0.01, beta=0.84, gamma=0.15)
+    G = nx.scale_free_graph(default_size, alpha=0.01, beta=0.84, gamma=0.15, create_using=nx.Graph)
     makedir(path_output_data_type + 'entity_' + str(i))
     save_graph(path_output_data_type + 'entity_' + str(i) + '/' + 'J_ij.csv', G)
 
 #Random Small World Graph
-path_output_data_type = path_output_data + 'small_world/'
-makedir(path_output_data_type)
+#path_output_data_type = path_output_data + 'small_world/'
+#makedir(path_output_data_type)
 
-for i in range(default_no_entities):
-    G = nx.navigable_small_world_graph(np.sqrt(default_size).astype(np.int8))
-    makedir(path_output_data_type + 'entity_' + str(i))
-    save_graph(path_output_data_type + 'entity_' + str(i) + '/' + 'J_ij.csv', G)
+#for i in range(default_no_entities):
+#    G = nx.navigable_small_world_graph(np.sqrt(default_size).astype(np.int8))
+#    makedir(path_output_data_type + 'entity_' + str(i))
+#    save_graph(path_output_data_type + 'entity_' + str(i) + '/' + 'J_ij.csv', G)
 
 # Random Intersection Graph
 path_output_data_type = path_output_data + 'intersection/'

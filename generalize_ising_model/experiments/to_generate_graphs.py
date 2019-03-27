@@ -4,9 +4,9 @@ import os
 from generalize_ising_model.ising_utils import save_graph, makedir
 
 path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/'
-simulation_name = 'experiment_2'
+simulation_name = 'experiment_1'
 default_size = 40
-default_no_entities = 5
+default_no_entities = 100
 
 path_output_data = path_input + simulation_name
 
@@ -33,9 +33,12 @@ for degree in degrees_expected:
         G = nx.expected_degree_graph(secuence)
         G.remove_edges_from(nx.selfloop_edges(G))
 
-        degrees = sorted(d for n, d in G.degree())
+        #degrees = sorted(d for n, d in G.degree())
 
-        print('Expected: ' + str(degree) + ' - ' + 'Estimated: ' + str(np.mean(degrees)))
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.random()
+
+        #print('Expected: ' + str(degree) + ' - ' + 'Estimated: ' + str(np.mean(degrees)))
         save_graph(path_output_data_degree_entity + '/' + 'J_ij.csv', G)
 
 # Density
@@ -58,5 +61,8 @@ for density in densities:
         G = nx.dense_gnm_random_graph(default_size, density)
         G.remove_edges_from(nx.selfloop_edges(G))
 
-        print('Len: ' + str(len(G.edges())))
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.random()
+
+        #print('Len: ' + str(len(G.edges())))
         save_graph(path_output_data_density_entity + '/' + 'J_ij.csv', G)

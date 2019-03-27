@@ -252,7 +252,7 @@ def run(base_dir):
     preproc.write_graph(graph2use='colored', format='png', simple_form=True)
     preproc.run()
 
-base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Awake/Resting'
+base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Deep/Resting'
 run(base_dir)
-base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Awake/Task'
+base_dir = '/home/brainlab/Desktop/Rudas/Data/Propofol/Deep/Task'
 run(base_dir)
