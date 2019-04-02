@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import matplotlib.patches as mpatches
 
-path_simulation_output = ['/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/simulation/14_undirected_unweighted_1.0']
+path_simulation_output = ['/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/simulation/0_hcp']
 #                          '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/simulation/3_undirected_unweighted',
 #                          '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/simulation/4_undirected_weighted']
 

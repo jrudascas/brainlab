@@ -31,8 +31,8 @@ class SignalExtraction(BaseInterface):
         #atlas_filename = dataset.maps
 
         masker = NiftiLabelsMasker(labels_img='/home/brainlab/Desktop/Rudas/Data/Parcellation/atlas_NMI_2mm.nii',
-                                   standardize=False,
-                                   detrend=False,
+                                   standardize=True,
+                                   detrend=True,
                                    low_pass=0.1,
                                    high_pass=0.01,
                                    t_r=self.inputs.tr,

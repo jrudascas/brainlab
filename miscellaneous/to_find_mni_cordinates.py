@@ -6,9 +6,27 @@ from numpy.linalg import inv
 from nilearn import datasets, image
 from nilearn import plotting
 
+
+def distance(pt_1, pt_2):
+    return np.linalg.norm(pt_1-pt_2)
+
+
+def to_find_closer(data_atlas, voxel_coordinate):
+    d_min = 9999999
+
+    x, y, z = np.where(data_atlas != 0)
+
+    for x1, y1, z1 in zip(x,y,z):
+        d = distance(np.array([x1, y1, z1]), np.asarray(voxel_coordinate))
+        if d <= d_min:
+            d_min = d
+            id = data_atlas[x1, y1, z1]
+
+    return id
+
 path_atlas = '/home/brainlab/Desktop/Rudas/Data/Parcellation/atlas_NMI_2mm.nii'
 #path_atlas = '/usr/local/fsl/data/atlases/HarvardOxford/HarvardOxford-cort-maxprob-thr25-2mm.nii.gz'
-path_mat_file = '/home/brainlab/Downloads/mni_coord_stats (1).mat'
+path_mat_file = '/home/brainlab/Downloads/mni_coord_stats.mat'
 
 mat = scipy.io.loadmat(path_mat_file)
 
@@ -25,13 +43,17 @@ new_image = np.zeros(data_atlas.shape)
 image_t_values = np.zeros(data_atlas.shape)
 #image_t_values = image_t_values + 4
 
-with open('labels.txt', 'w') as f:
+with open('labels_with_closer.txt', 'w') as f:
     for index in range(coordinate.shape[0]):
         point_coordinate = coordinate[index, :]*1000
 
         voxel_coordinate = tuple(np.rint(apply_affine(inv(affine_atlas), point_coordinate)).astype(int))
 
-        f.write("%s\n" % data_atlas[voxel_coordinate])
+        if data_atlas[voxel_coordinate] == 0:
+            f.write("%s\n" % to_find_closer(data_atlas, voxel_coordinate))
+            #f.write("%s\n" % data_atlas[voxel_coordinate])
+        else:
+            f.write("%s\n" % data_atlas[voxel_coordinate])
 
         if data_atlas[voxel_coordinate] == 0:
             new_image[voxel_coordinate] = 5
