@@ -21,8 +21,8 @@ spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
 print('SPM version: ' + str(spm.SPMCommand().version))
 
-base_dir = '/home/brainlab/Desktop/testcristian2/fmri'
-structural_dir = '/home/brainlab/Desktop/testcristian2/anat/'
+base_dir = '/home/brainlab/Desktop/testcristian/fmri'
+structural_dir = '/home/brainlab/Desktop/testcristian/anat/'
 experiment_dir = opj(base_dir, 'output/')
 output_dir = 'datasink'
 working_dir = 'workingdir'
@@ -215,8 +215,8 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (extract_confounds_gs, signal_extraction, [('out_file', 'confounds_file')]),
                  #(extract_confounds_ws_csf, signal_extraction, [('out_file', 'confounds_file')]),
 
-                 #(smooth, descomposition, [('smoothed_files', 'in_file')]),
-                 #(extract_confounds_ws_csf, descomposition, [('out_file', 'confounds_file')]),
+                 (smooth, descomposition, [('smoothed_files', 'in_file')]),
+                 (extract_confounds_ws_csf, descomposition, [('out_file', 'confounds_file')]),
 
                  (extract_confounds_gs, datasink, [('out_file', 'preprocessing.@confounds_with_gs')]),
                  (extract_confounds_ws_csf, datasink, [('out_file', 'preprocessing.@confounds_without_gs')]),
@@ -226,8 +226,9 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
                  (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
                  (signal_extraction, datasink, [('time_series_out_file', 'preprocessing.@time_serie')]),
                  (signal_extraction, datasink, [('correlation_matrix_out_file', 'preprocessing.@correlation_matrix')]),
-                 #(descomposition, datasink, [('out_file', 'preprocessing.@descomposition')]),
-                 #(descomposition, datasink, [('plot_files', 'preprocessing.@descomposition_plot_files')])
+                 (descomposition, datasink, [('out_file', 'preprocessing.@descomposition')]),
+                 (descomposition, datasink, [('plot_files', 'preprocessing.@descomposition_plot_files')]),
+                 (descomposition, datasink, [('time_series', 'preprocessing.@descomposition_time_series')])
                  ])
 
 preproc.write_graph(graph2use='colored', format='png', simple_form=True)
