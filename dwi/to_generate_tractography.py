@@ -45,7 +45,7 @@ affine = dwi_img.affine
 mask = nib.load(mask_path).get_data().astype(bool)
 
 struct_img = nib.load(struct_path)
-gtab = gradient_table(bval_path, bvec_path)
+gtab = gradient_table(bval_path, bvec_path, b0_threshold=50)
 
 #t1 = read_stanford_t1()
 #t1_data = t1.get_data()
