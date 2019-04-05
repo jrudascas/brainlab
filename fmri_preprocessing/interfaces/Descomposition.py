@@ -14,7 +14,7 @@ class DescompositionInputSpec(BaseInterfaceInputSpec):
 class DescompositionOutputSpec(TraitedSpec):
     out_file = OutputMultiPath(File(genfile=True))
     plot_files = OutputMultiPath(File(genfile=True))
-
+    time_series = File(genfile=True)
 
 class Descomposition(BaseInterface):
     input_spec = DescompositionInputSpec
@@ -25,6 +25,8 @@ class Descomposition(BaseInterface):
         from nilearn.decomposition import CanICA, DictLearning
         from nilearn.plotting import plot_stat_map, plot_prob_atlas
         from nilearn.image import iter_img
+        from nilearn.input_data import NiftiMapsMasker
+        import numpy as np
 
         canica = CanICA(n_components=self.inputs.n_components,
                         smoothing_fwhm=None,
@@ -47,6 +49,12 @@ class Descomposition(BaseInterface):
         components_img.to_filename('descomposition_canica.nii.gz')
 
         # plot_prob_atlas(components_img, title='All ICA components')
+
+
+        masker = NiftiMapsMasker(maps_img=components_img, standardize=True, memory='nilearn_cache', verbose=5)
+        time_series_ica = masker.fit_transform(self.inputs.in_file)
+
+        np.savetxt('time_series_ica.csv', np.asarray(time_series_ica), delimiter=',')
 
         for i, cur_img in enumerate(iter_img(components_img)):
             display = plot_stat_map(cur_img, display_mode="ortho", colorbar=True)
@@ -88,6 +96,8 @@ class Descomposition(BaseInterface):
         for i in range(self.inputs.n_components):
             outputs['plot_files'].append(os.path.abspath('ica_ic_' + str(i + 1) + '.png'))
             outputs['plot_files'].append(os.path.abspath('dic_ic_' + str(i + 1) + '.png'))
+
+        outputs['time_series'] = os.path.abspath('time_series_ica.csv')
 
         return outputs
 
