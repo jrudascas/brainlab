@@ -233,3 +233,5 @@ preproc.connect([(infosource, selectfiles, [('subject_id', 'subject_id')]),
 
 preproc.write_graph(graph2use='colored', format='png', simple_form=True)
 preproc.run()
+
+os.system('rm -rf %s'%opj(base_dir, 'output/') + working_dir)
