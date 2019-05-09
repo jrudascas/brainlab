@@ -6,6 +6,20 @@ import os
 
 path_input = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_1/'
 
+
+
+
+path_output_data = path_input + 'biological/'
+path = '/home/brainlab/Downloads/celegansneural/celegansneural.mtx'
+path_output_data_type = path_output_data + 'celegans_neuronal/'
+makedir(path_output_data_type)
+G=nx.read_edgelist(path, nodetype=int, create_using=nx.DiGraph, data=(('weight',float),))
+makedir(path_output_data_type + 'entity_' + str(0))
+G.remove_edges_from(nx.selfloop_edges(G))
+save_graph(path_output_data_type + 'entity_' + str(0) + '/' + 'J_ij.csv', G)
+
+
+
 default_size = 40
 default_no_entities = 20
 
@@ -45,7 +59,7 @@ for i in range(default_no_entities):
 #makedir(path_output_data_type)
 
 #for i in range(default_no_entities):
-#    G = nx.navigable_small_world_graph(np.sqrt(default_size).astype(np.int8))
+    G = nx.navigable_small_world_graph(np.sqrt(default_size).astype(np.int8))
 #    makedir(path_output_data_type + 'entity_' + str(i))
 #    save_graph(path_output_data_type + 'entity_' + str(i) + '/' + 'J_ij.csv', G)
 

@@ -5,11 +5,11 @@ class SignalExtractionInputSpec(BaseInterfaceInputSpec):
     in_file = File(exists=True, mandatory=True)
     time_series_out_file = File(mandatory=True)
     correlation_matrix_out_file = File(genfile=True)
-    fmri_cleaned_out_file = File(genfile=True)
     atlas_identifier = traits.String(mandatory=True)
     tr = traits.Float(mandatory=True)
     confounds_file = File(mandatory=True)
     plot = traits.Bool(default_value=False, mandatory = False)
+
 
 class SignalExtractionOutputSpec(TraitedSpec):
     time_series_out_file = File(genfile=True)
@@ -25,10 +25,25 @@ class SignalExtraction(BaseInterface):
 
         from nilearn import datasets
         from nilearn.input_data import NiftiLabelsMasker
+        from nilearn.image import clean_img
         import numpy as np
+        import nibabel as nib
 
         #dataset = datasets.fetch_atlas_harvard_oxford(self.inputs.atlas_identifier)
         #atlas_filename = dataset.maps
+
+        image_cleaned = clean_img(self.inputs.in_file,
+                                  sessions=None,
+                                  detrend=True,
+                                  standardize=True,
+                                  #low_pass=0.1,
+                                  high_pass=0.01,
+                                  t_r=self.inputs.tr,
+                                  confounds=self.inputs.confounds_file,
+                                  ensure_finite=True,
+                                  mask_img='/home/brainlab/Desktop/Rudas/Data/Propofol/MNI152_T1_2mm_brain_mask.nii.gz')
+
+        nib.save(image_cleaned, 'fmri_cleaned.nii')
 
         masker = NiftiLabelsMasker(labels_img='/home/brainlab/Desktop/Rudas/Data/Parcellation/atlas_NMI_2mm.nii',
                                    standardize=True,
@@ -74,7 +89,8 @@ class SignalExtraction(BaseInterface):
 
     def _list_outputs(self):
         return {'time_series_out_file': os.path.abspath(self.inputs.time_series_out_file),
-                'correlation_matrix_out_file':os.path.abspath(self.inputs.correlation_matrix_out_file)}
+                'correlation_matrix_out_file': os.path.abspath(self.inputs.correlation_matrix_out_file),
+                'fmri_cleaned_out_file': os.path.abspath('fmri_cleaned.nii')}
 
     def _gen_filename(self, name):
         if name == 'time_series_out_file':

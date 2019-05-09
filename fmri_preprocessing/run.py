@@ -27,8 +27,13 @@ def run(base_dir):
     output_dir = 'datasink'
     working_dir = 'workingdir'
 
-    #subject_list = ['2014_05_02_02CB']
+    '''
 
+    subject_list = ['2014_05_02_02CB',
+                    '2014_05_16_16RA',
+                    '2014_05_30_30AQ',
+                    '2014_07_04_04HD']
+    '''
     subject_list = ['2014_05_02_02CB',
                     '2014_05_16_16RA',
                     '2014_05_30_30AQ',
@@ -47,10 +52,9 @@ def run(base_dir):
                     '2014_11_27_27HF',
                     '2014_12_10_10JR']
 
-
     # list of subject identifiers
 
-    fwhm = 6                        # Smoothing widths to apply (Gaussian kernel size)
+    fwhm = 8                        # Smoothing widths to apply (Gaussian kernel size)
     TR = 2                          # Repetition time
     init_volume = 0                 # Firts volumen identification which will use in the pipeline
     iso_size = 2                    # Isometric resample of functional images to voxel size (in mm)
@@ -245,6 +249,7 @@ def run(base_dir):
                      (normalize_masks, datasink, [('normalized_files', 'preprocessing.@masks_normalized')]),
                      (signal_extraction, datasink, [('time_series_out_file', 'preprocessing.@time_serie')]),
                      (signal_extraction, datasink, [('correlation_matrix_out_file', 'preprocessing.@correlation_matrix')]),
+                     (signal_extraction, datasink, [('fmri_cleaned_out_file', 'preprocessing.@fmri_cleaned_out_file')]),
                      #(descomposition, datasink, [('out_file', 'preprocessing.@descomposition')]),
                      #(descomposition, datasink, [('plot_files', 'preprocessing.@descomposition_plot_files')])
                      ])

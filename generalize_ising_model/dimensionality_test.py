@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from generalize_ising_model.ising_utils import corrfun, dim, find_nearest
 
+np.set_printoptions(precision=4)
+
 mat = scipy.io.loadmat('/home/brainlab/Desktop/Rudas/Scripts/ising/dimentionality/wd1/full.mat')
 
 corr = mat['Corr_all']

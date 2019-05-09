@@ -41,8 +41,7 @@ for dirs in natsorted(os.listdir(path_input_aux)):
 
                 J = to_normalize(np.loadtxt(path_input_aux + dirs + '/' + dir + '/' + entity + '/' + default_Jij_name, delimiter=','))
 
-                #temperature_parameters = (0.05, 5, no_temperature)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
-                temperature_parameters = (0.05, 10, no_temperature)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
+                temperature_parameters = (0.0, J.shape[-1], no_temperature)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
 
                 if not os.path.exists(dir_output_name_case_exp + '/' + 'parameters.pkl'):
                     output = open(dir_output_name_case_exp + '/' + 'parameters.pkl', 'wb')
