@@ -27,7 +27,7 @@ def to_calculate_mean_phi(TPM, spin_mean):
 
 def to_estimate_tpm_from_ising_model(J, T):
     N = J.shape[-1]
-    setting_int = np.linspace(0, np.power(2, N) - 1, num=np.power(2, N)).astype(int)
+    setting_int = np.linspace(0, np.power(2, N) - 1, num=2**N).astype(int)
 
     M = list(map(lambda x: list(np.binary_repr(x, width=N)), setting_int))
     M = np.flipud(np.fliplr(np.asarray(M).astype(np.int)))
@@ -43,10 +43,10 @@ def to_estimate_tpm_from_ising_model(J, T):
     FPM[detFlip] = 1
     FPM[notdetFlip] = np.exp(-FPM[notdetFlip] / T)
 
-    TPM = np.zeros((np.power(2, N), np.power(2, N)))
+    TPM = np.zeros((np.power(2, N), 2**N))
 
-    for iTPM in range(np.power(2, N)):
-        for jTPM in range(np.power(2, N)):
+    for iTPM in range(2**N):
+        for jTPM in range(2**N):
 
             lgclP = M[iTPM, :] - M[jTPM, :]
             lgclP = lgclP.astype(bool)
