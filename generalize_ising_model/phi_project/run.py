@@ -7,9 +7,9 @@ import collections
 from generalize_ising_model.ising_utils import distance_wei, to_normalize, to_save_results, makedir
 from generalize_ising_model.phi_project.utils import to_estimate_tpm_from_ising_model, to_calculate_mean_phi
 
-dir_output_name = '/home/brainlab/Desktop/Rudas/Data/Ising/experiment_2/data/'
+dir_output_name = '/home/user/Desktop/phiTest/'
 Jij = scipy.io.loadmat(
-    '/home/brainlab/Desktop/Rudas/Scripts/fmri/generalize_ising_model/phi_project/data/mean_struct_corr.mat')
+    '/home/user/Desktop/phiTest/mean_struct_corr.mat')
 
 rsn_index = {'AUD': [33, 34, 29, 30, 21],
              'DMN': [9, 25, 15, 24, 7],
@@ -27,7 +27,7 @@ Jij = Jij['meanJ_prob']
 D, B = distance_wei(1. / Jij)
 
 # Ising Parameters
-temperature_parameters = (-1, 4, 20)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
+temperature_parameters = (2, 5, 10)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
 no_simulations = 500  # Number of simulation after thermalization
 thermalize_time = 0.3  #
 
@@ -80,7 +80,7 @@ for key, value in d.items():
     for t in ts:
         #print('Temperature: ' + str(t))
         tpm, fpm = to_estimate_tpm_from_ising_model(J, t)
-        phi, phiSum, phiSus = to_calculate_mean_phi(fpm, spin_mean[:, cont])
+        phi, phiSum, phiSus = to_calculate_mean_phi(fpm, spin_mean[:, cont], t)
         phi_temperature.append(phi)
         phi_sum.append(phiSum)
         phi_sus.append(phiSus)

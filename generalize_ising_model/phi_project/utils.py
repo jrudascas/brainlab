@@ -2,8 +2,8 @@ import numpy as np
 import pyphi
 from pyphi.compute import phi
 
-def to_calculate_mean_phi(TPM, spin_mean):
-    N = TPM.shape[-1]
+def to_calculate_mean_phi(tpm, spin_mean,t):
+    N = tpm.shape[-1]
 
     setting_int = np.linspace(0, np.power(2, N) - 1, num=np.power(2, N)).astype(int)
 
@@ -13,14 +13,18 @@ def to_calculate_mean_phi(TPM, spin_mean):
     num_states = M.shape[0]
     phi_values = []
 
-    network = pyphi.Network(TPM)
+    network = pyphi.Network(tpm)
     for state in range(num_states):
         if spin_mean[state] != 0:
             phi_values.append(phi(pyphi.Subsystem(network, M[state, :], range(network.size))))
+            #phi_values_sum = phi_values*spin_mean[state]
 
     phi_values_sqr = [phi_ * phi_ for phi_ in phi_values]
-    phiSum = np.sum(phi_values)
-    phiSus = (np.sum(phi_values_sqr) - phiSum * phiSum) / N
+
+    weigth = spin_mean[np.where(spin_mean != 0)]
+
+    phiSum = np.sum(phi_values*weigth)
+    phiSus = (np.sum(phi_values_sqr*weigth) - (phiSum * phiSum)) / (N*t)
 
     return np.mean(phi_values), phiSum, phiSus
 
@@ -43,7 +47,7 @@ def to_estimate_tpm_from_ising_model(J, T):
     FPM[detFlip] = 1
     FPM[notdetFlip] = np.exp(-FPM[notdetFlip] / T)
 
-    TPM = np.zeros((np.power(2, N), 2**N))
+    TPM = np.zeros((2**N, 2**N))
 
     for iTPM in range(2**N):
         for jTPM in range(2**N):
