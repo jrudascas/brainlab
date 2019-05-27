@@ -5,21 +5,21 @@ import time
 import matplotlib.pyplot as plt
 import collections
 from generalize_ising_model.ising_utils import distance_wei, to_normalize, to_save_results, makedir
-from generalize_ising_model.phi_project.utils import to_estimate_tpm_from_ising_model, to_calculate_mean_phi
+from generalize_ising_model.phi_project.utils import to_estimate_tpm_from_ising_model, to_calculate_mean_phi, to_save_phi
 
 dir_output_name = '/home/user/Desktop/phiTest/'
 Jij = scipy.io.loadmat(
     '/home/user/Desktop/phiTest/mean_struct_corr.mat')
 
-rsn_index = {'AUD': [33, 34, 29, 30, 21],
-             'DMN': [9, 25, 15, 24, 7],
-             'ECL': [7, 18, 17, 3, 19],
-             'ECR': [67, 66, 56, 75, 52],
-             'SAL': [66, 83, 51, 68, 75],
-             'SEN': [16, 21, 22, 23, 33],
-             'VIL': [59, 55, 64, 61, 77],
-             'VIM': [4, 20, 12, 9, 73],
-             'VIO': [20, 10, 12, 4, 6]}
+rsn_index = {'AUD': [33, 34, 29, 30, 21]}#,
+           #  'DMN': [9, 25, 15, 24, 7],
+           #  'ECL': [7, 18, 17, 3, 19],
+            # 'ECR': [67, 66, 56, 75, 52],
+          #   'SAL': [66, 83, 51, 68, 75],
+            # 'SEN': [16, 21, 22, 23, 33],
+           #  'VIL': [59, 55, 64, 61, 77],
+            # 'VIM': [4, 20, 12, 9, 73],
+            # 'VIO': [20, 10, 12, 4, 6]}
 
 d = collections.OrderedDict(sorted(rsn_index.items()))
 Jij = Jij['meanJ_prob']
@@ -27,8 +27,8 @@ Jij = Jij['meanJ_prob']
 D, B = distance_wei(1. / Jij)
 
 # Ising Parameters
-temperature_parameters = (2, 5, 10)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
-no_simulations = 500  # Number of simulation after thermalization
+temperature_parameters = (-1, 5, 10)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
+no_simulations = 100  # Number of simulation after thermalization
 thermalize_time = 0.3  #
 
 makedir(dir_output_name)
@@ -60,7 +60,7 @@ for key, value in d.items():
 
     sub_dir_output_name = dir_output_name + '/' + key + '/'
     makedir(dir_output_name + '/' + key)
-    to_save_results(temperature_parameters, J, E, M, S, H, simulated_fc, critical_temperature, sub_dir_output_name)
+    to_save_results(temperature_parameters, J, E, M, H, S, simulated_fc, critical_temperature, sub_dir_output_name)
     print(time.time() - start_time)
 
     start_time = time.time()
@@ -86,36 +86,9 @@ for key, value in d.items():
         phi_sus.append(phiSus)
 
         cont += 1
-
+    output_path = dir_output_name + '/' + 'phi/' + key + '/'
+    makedir(dir_output_name + '/' + 'phi')
+    to_save_phi(ts, phi_temperature, phi_sum,phi_sus, S, critical_temperature, key, output_path)
     print(time.time() - start_time)
 
-    f = plt.figure(figsize=(18, 10))  # plot the calculated values
 
-    f.add_subplot(2, 2, 1)
-    plt.scatter(ts, S, s=50, marker='o', color='IndianRed')
-    plt.xlabel("Temperature (T)", fontsize=20)
-    plt.ylabel("Susceptibility", fontsize=20)
-    plt.axis('tight')
-
-    f.add_subplot(2, 2, 2)
-    plt.scatter(ts, phi_temperature, s=50, marker='*', color='IndianRed')
-    plt.xlabel("Temperature (T)", fontsize=20)
-    plt.ylabel("Phi", fontsize=20)
-    plt.axis('tight')
-
-    f.add_subplot(2, 2, 3)
-    plt.scatter(ts, phi_sum, s=50, marker='*', color='IndianRed')
-    plt.xlabel("Temperature (T)", fontsize=20)
-    plt.ylabel("Phi_sum", fontsize=20)
-    plt.axis('tight')
-
-    f.add_subplot(2, 2, 4)
-    plt.scatter(ts, phi_sus, s=50, marker='*', color='IndianRed')
-    plt.xlabel("Temperature (T)", fontsize=20)
-    plt.ylabel("Phi_sus", fontsize=20)
-    plt.axis('tight')
-
-    #plt.show()
-    plt.savefig('plots_' + key + '.png', dpi=300)
-
-    print(time.time() - start_time)

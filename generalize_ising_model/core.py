@@ -7,7 +7,7 @@ from generalize_ising_model.ising_utils import to_find_critical_temperature
 import warnings
 
 warnings.filterwarnings("ignore")
-n_cpu = multiprocessing.cpu_count() - 4
+n_cpu = multiprocessing.cpu_count() - 6
 
 
 # @numba.jit(nopython=True)
@@ -40,12 +40,13 @@ def monte_carlo_metropolis(J, spin_vec, t, iterations, thermalize_time=None):
 
     if thermalize_time is not None:
 
+
         index_thermalize_time = np.round(iterations * thermalize_time).astype(int)
-        spin_thermalized = np.squeeze(np.array(list_spin))[index_thermalize_time:, :].astype(np.int8)
+        spin_thermalized = np.squeeze(np.array(list_spin))[index_thermalize_time:, :]#.astype(np.int8)
         energy = 0
         energy_squard = 0
-        spin_bin_sum = np.zeros(np.power(2, no_spin))
-        setting_int = np.linspace(0, np.power(2, no_spin) - 1, num=np.power(2, no_spin)).astype(int)
+        spin_bin_sum = np.zeros(2**no_spin)
+        setting_int = np.linspace(0, (2**no_spin) - 1, num=2**no_spin).astype(int)
         M = list(map(lambda x: list(np.binary_repr(x, width=no_spin)), setting_int))
         M = np.flipud(np.fliplr(np.asarray(M).astype(np.int)))
         M = M * 2 - 1
@@ -73,7 +74,7 @@ def monte_carlo_metropolis(J, spin_vec, t, iterations, thermalize_time=None):
 
 def compute_par(values):
     n = values[0].shape[-1]
-    no_flip = 100 * n ** 2
+    no_flip = 10 * n ** 2
     #no_flip = 10 * n ** 2
     avg_therm = no_flip * (1 - values[4])
 
@@ -134,7 +135,7 @@ def generalized_ising(Jij, temperature_parameters=(0.1, 5, 100), no_simulations=
 
     simulated_fc = np.zeros((n, n, len(ts)))
     E, M, S, H = np.zeros(len(ts)), np.zeros(len(ts)), np.zeros(len(ts)), np.zeros(len(ts))
-    spin_mean = np.zeros((np.power(2, n), len(ts)))
+    spin_mean = np.zeros((2**n, len(ts)))
 
     for i in range(results.shape[0]):
         E[results[i, 5]:results[i, 6]] = results[i, 0]

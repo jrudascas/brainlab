@@ -139,13 +139,13 @@ def peakdet(v, delta, x=None):
 def to_find_critical_temperature(data, temp):
     import numpy as np
     from scipy.signal import argrelextrema
+    local_max = np.where(data==max(data))
+    #local_max = argrelextrema(data, np.greater, order=1)
+   # y_test = data.copy()
+    #y_test[np.array(local_max)] = (y_test[np.array(local_max) + 1] + y_test[np.array(local_max) - 1]) / 2
 
-    local_max = argrelextrema(data, np.greater, order=1)
-    y_test = data.copy()
-    y_test[np.array(local_max)] = (y_test[np.array(local_max) + 1] + y_test[np.array(local_max) - 1]) / 2
-
-    return temp[np.where(y_test == np.max(y_test[local_max]))]
-
+    #return temp[np.where(y_test == np.max(y_test[local_max]))]
+    return temp[local_max]
 
 def to_normalize(J):
     max_J = np.max(J)

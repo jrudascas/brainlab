@@ -1,6 +1,7 @@
 import numpy as np
 import pyphi
 from pyphi.compute import phi
+import matplotlib.pyplot as plt
 
 def to_calculate_mean_phi(tpm, spin_mean,t):
     N = tpm.shape[-1]
@@ -66,3 +67,59 @@ def to_estimate_tpm_from_ising_model(J, T):
                 TPM[iTPM, jTPM] = np.mean(FPMtemp)
 
     return TPM, FPM
+
+def to_save_phi(ts, phi , phiSum, phiSus, S, critTemp, network, path_output):
+    default_delimiter = ','
+    format = '%1.5f'
+
+    np.savetxt(path_output + 'temps.csv', ts, delimiter=default_delimiter, fmt=format)
+    np.savetxt(path_output + 'phi.csv', phi, delimiter=default_delimiter, fmt=format)
+    np.savetxt(path_output + 'phiSum.csv', phiSum, delimiter=default_delimiter, fmt=format)
+    np.savetxt(path_output + 'phiSus.csv', phiSus, delimiter=default_delimiter, fmt=format)
+
+    f = plt.figure(figsize=(18, 10))  # plot the calculated values
+    x = np.arange(6)
+
+    ax1 = f.add_subplot(2, 2, 1)
+    ax1.scatter(ts, S, s=50, marker='o', color='IndianRed')
+    plt.xlabel("Temperature (T)", fontsize=20)
+    plt.ylabel("Susceptibility", fontsize=20)
+
+    #plt.xticks(x)
+    plt.axvline(x=critTemp,linestyle='--',color='k')
+    ax1.set_xscale('log')
+    #plt.xticks(x, ['0', '1', '2', '3', '4', '5'])
+
+    ax2 = f.add_subplot(2, 2, 2)
+    ax2.scatter(ts, phi, s=50, marker='*', color='IndianRed')
+    plt.xlabel("Temperature (T)", fontsize=20)
+    plt.ylabel("Phi", fontsize=20)
+    #plt.xticks(x)
+
+    plt.axvline(x=critTemp, linestyle='--', color='k')
+    ax2.set_xscale('log')
+  #  plt.xticks(x, ['0', '1', '2', '3', '4', '5'])
+
+    ax3 = f.add_subplot(2, 2, 3)
+    ax3.scatter(ts, phiSum, s=50, marker='*', color='IndianRed')
+    plt.xlabel("Temperature (T)", fontsize=20)
+    plt.ylabel("Phi_sum", fontsize=20)
+    #plt.xticks(x)
+    plt.axvline(x=critTemp, linestyle='--', color='k')
+    ax3.set_xscale('log')
+    #plt.xticks(x, ['0', '1', '2', '3', '4', '5'])
+
+
+    ax4 = f.add_subplot(2, 2, 4)
+    ax4.scatter(ts, phiSus, s=50, marker='*', color='IndianRed')
+    plt.xlabel("Temperature (T)", fontsize=20)
+    plt.ylabel("Phi_sus", fontsize=20)
+    #ax4.xticks(x,['0','1','2','3','4','5'])
+    plt.axvline(x=critTemp, linestyle='--', color='k')
+    ax4.set_xscale('log')
+    #plt.xticks(x, ['0', '1', '2', '3', '4', '5'])
+
+    #plt.show()f=
+    plt.savefig(path_output + 'plots_' + network + '.png', dpi=300)
+
+    plt.close()
