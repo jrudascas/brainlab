@@ -78,7 +78,6 @@ def to_save_phi(ts, phi , phiSum, phiSus, S, critTemp, network, path_output):
     np.savetxt(path_output + 'phiSus.csv', phiSus, delimiter=default_delimiter, fmt=format)
 
     f = plt.figure(figsize=(18, 10))  # plot the calculated values
-    x = np.arange(6)
 
     ax1 = f.add_subplot(2, 2, 1)
     ax1.scatter(ts, S, s=50, marker='o', color='IndianRed')
@@ -120,6 +119,6 @@ def to_save_phi(ts, phi , phiSum, phiSus, S, critTemp, network, path_output):
     #plt.xticks(x, ['0', '1', '2', '3', '4', '5'])
 
     #plt.show()f=
-    plt.savefig(path_output + 'plots_' + network + '.png', dpi=300)
+    plt.savefig(path_output + 'plots_' + str(network) + '.png', dpi=300)
 
     plt.close()
