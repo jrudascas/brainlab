@@ -1,27 +1,32 @@
+
 import scipy.io
-import scipy.signal
+from scipy.signal import hilbert
 import numpy as np
-import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+
 from matplotlib import animation
+from QMBrain.utils import *
 
-filename = input('Input the EEG filename: ')
-filetype = input('Input the EEG filetype: ')
 
-if filetype == 'mat':
-    dataSet = scipy.io.loadmat(filename)
+filepathMat = '/home/user/Desktop/QMBrain/EEG1.mat'
+filepathChanLoc = '/home/user/Desktop/QMBrain/chanLocXY.csv'
+filepathData = '/home/user/Desktop/QMBrain/data.csv'
+filepathTimes = '/home/user/Desktop/QMBrain/times.csv'
 
-elif filetype == 'csv':
-    dataSet = pd.read_csv(filename)
 
-data = dataSet['data']
-times = dataSet['times']
-chanLocs = dataSet['chanlocs']
 
-x = chanLocs['X']
-y = chanLocs['Y']
+#dataSet = load_matrix(filepathMat)['EEG1']
 
-hilbertTransData = scipy.signal.hilbert(data)
+data = load_matrix(filepathData)
+times = load_matrix(filepathTimes)
+
+chanLocs = load_matrix(filepathChanLoc)
+
+x = chanLocs[:,0]
+y = chanLocs[:,1]
+
+hilbertTransData = hilbert(data)
 
 amplitude = np.abs(hilbertTransData)
 
@@ -29,7 +34,7 @@ phase = np.unwrap(np.angle(hilbertTransData))
 
 ampMag = np.linalg.norm(amplitude.T)
 
-normAmp = (np.asarray(amplitude.T)/np.asarray(ampMag)).T
+normAmp = (np.asarray(amplitude.T)/np.asarray(ampMag))
 
 probability = normAmp*normAmp
 
@@ -42,34 +47,80 @@ ySqrAvg = probability@(y*y)
 dx = np.sqrt(xSqrAvg-(xAvg*xAvg))
 dy = np.sqrt(ySqrAvg-(yAvg*yAvg))
 
-# Create an animation of the average position on the scalp
 
-#for i in range(300):
-fig = plt.figure()
-ax = plt.axes(xlim=(0, 2), ylim=(-2, 2))
-line, = ax.plot([], [], lw=2)
+#Calculate momentum of brain state
 
+pxSum = np.zeros((len(times),len(x)),dtype=np.complex64)
+pxSqrSum = np.copy(pxSum)
 
+pySum = np.zeros((len(times),len(y)),dtype=np.complex64)
+pySqrSum = np.copy(pySum)
 
+for i in range(len(x)):
+    current_x = x[i]
+    current_y = y[i]
 
-# First set up the figure, the axis, and the plot element we want to animate
+    #find closest nodes
 
-# initialization function: plot the background of each frame
-def init():
-    line.set_data([], [])
-    return line
+    xDiff = current_x - x
+    yDiff = current_y - y
 
+    xPairs = np.where(abs(xDiff)>abs(yDiff))
+    yPairs = np.where(abs(yDiff)>abs(xDiff))
 
-# animation function.  This is called sequentially
-def animate(x,y):
-    fig.errorbar(xAvg, yAvg, dy, dy, dx, dx, marker='.')
-    line.set_data(x, y)
-    return line
+    distance = np.sqrt(np.square(xDiff)+np.square(yDiff))
 
+    xPairDistance = distance[xPairs]
+    yPairDistance = distance[yPairs]
 
-# call the animator.  blit=True means only re-draw the parts that have changed.
-anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=20, blit=True)
+    firstX = sorted(xPairs)[-1][-1]
+    secondX = sorted(xPairs)[-1][-2]
 
+    firstY = sorted(yPairs)[-1][-1]
+    secondY = sorted(yPairs)[-1][-2]
 
-#anim.save('basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])yAvg[i],dx[i],dy[i])
+    diffX1 = x[firstX]-current_x
+    diffX2 = x[secondX] - current_x
+
+    diffY1 = x[firstY] - current_y
+    diffY2 = x[secondY] - current_y
+
+    psiConj = normAmp[:,i]*np.exp((-1j)*phase[i,:])
+    psi_n = normAmp[:,i]*np.exp((1j)*phase[i,:])
+
+    psi_n1x = normAmp[:,firstX]*np.exp((1j)*(phase[firstX,:]))
+    psi_n2x = normAmp[:, secondX]*np.exp((1j)*(phase[secondX,:]))
+
+    psi_n1y = normAmp[:, firstY]*np.exp((1j) * (phase[firstY,:]))
+    psi_n2y = normAmp[:, secondY]*np.exp((1j) * (phase[secondY,:]))
+
+    pxSum[:,i] = 0.5 * (psiConj*((psi_n1x-psi_n)/diffX1)+psiConj*((psi_n2x-psi_n)/diffX2))
+    pxSqrSum[:,i] = 0.5 * (psiConj*((psi_n-2*psi_n1x + psi_n2x)/np.square(diffX1)))
+
+    pySum[:,i] = 0.5 * (psiConj*((psi_n1y-psi_n)/diffY1)+psiConj*((psi_n2y-psi_n)/diffY2))
+    pySqrSum[:,i] = 0.5 * (psiConj*((psi_n-2*psi_n1y + psi_n2y)/np.square(diffY1)))
+
+#print(pySum)
+
+pxAvg = np.sum(pxSum,axis=1)
+pxSqrAvg = np.sum(pxSqrSum,axis=1)
+
+pyAvg = np.sum(pySum,axis=1)
+pySqrAvg = np.sum(pySqrSum,axis=1)
+
+#Considering only the length
+pxAvgL = np.abs(pxAvg)
+pxSqrAvgL = np.abs(pxSqrAvg)
+
+pyAvgL = np.abs(pyAvg)
+pySqrAvgL = np.abs(pySqrAvg)
+
+# Find uncertainties
+deltaX = np.sqrt(xSqrAvg-np.square(xAvg))
+deltaY = np.sqrt(ySqrAvg-np.square(yAvg))
+
+deltaPX = np.sqrt(pxSqrAvgL-np.square(pxAvgL))
+deltaPY = np.sqrt(pySqrAvgL-np.square(pyAvgL))
+
+f = plt.figure()
+f.plt
