@@ -24,6 +24,7 @@ def to_generate_randon_graph(size, isolate=False, weighted=True):
             if len(list(nx.isolates(G))) == 0:
                 break
 
+
     if weighted:
         for (u, v) in G.edges():
             G.edges[u, v]['weight'] = random.random()
