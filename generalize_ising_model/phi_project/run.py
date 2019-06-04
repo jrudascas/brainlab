@@ -27,8 +27,8 @@ Jij = Jij['meanJ_prob']
 D, B = distance_wei(1. / Jij)
 
 # Ising Parameters
-temperature_parameters = (-1, 5, 10)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
-no_simulations = 100  # Number of simulation after thermalization
+temperature_parameters = (-1, 5, 500)  # Temperature parameters (initial tempeture, final tempeture, number of steps)
+no_simulations = 500  # Number of simulation after thermalization
 thermalize_time = 0.3  #
 
 makedir(dir_output_name)
