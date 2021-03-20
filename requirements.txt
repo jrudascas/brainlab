@@ -41,7 +41,7 @@ iso8601==0.1.12
 isodate==0.6.0
 jedi==0.13.2
 jeepney==0.4
-Jinja2==2.10
+Jinja2==2.11.3
 joblib==0.13.2
 jsmin==2.2.2
 keyring==17.1.1
