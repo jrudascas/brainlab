@@ -88,7 +88,7 @@ pydub==0.23.1
 pyemd==0.5.1
 PyGithub==1.43.4
 Pygments==2.3.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 pymongo==3.7.2
 pyparsing==2.3.1
 pyphi==1.1.0
