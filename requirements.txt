@@ -64,7 +64,7 @@ nilearn==0.5.0
 nipype==1.1.7
 numba==0.42.0
 numexpr==2.6.9
-numpy==1.16.0
+numpy==1.22.0
 packaging==18.0
 panda==0.3.1
 pandas==0.23.4
